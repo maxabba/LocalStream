@@ -1,0 +1,68 @@
+{
+    "server": {
+        "port": 3000,
+        "httpsPort": 3443,
+        "host": "0.0.0.0"
+    },
+    "webrtc": {
+        "iceServers": [
+            {
+                "urls": "stun:stun.l.google.com:19302"
+            },
+            {
+                "urls": "stun:stun1.l.google.com:19302"
+            }
+        ]
+    },
+    "video": {
+        "defaultConstraints": {
+            "width": {
+                "ideal": 1920
+            },
+            "height": {
+                "ideal": 1080
+            },
+            "frameRate": {
+                "ideal": 60
+            },
+            "facingMode": "user"
+        },
+        "presets": {
+            "4k60": {
+                "width": 3840,
+                "height": 2160,
+                "frameRate": 60,
+                "bitrate": 20000000
+            },
+            "1080p60": {
+                "width": 1920,
+                "height": 1080,
+                "frameRate": 60,
+                "bitrate": 10000000
+            },
+            "1080p30": {
+                "width": 1920,
+                "height": 1080,
+                "frameRate": 30,
+                "bitrate": 5000000
+            },
+            "720p60": {
+                "width": 1280,
+                "height": 720,
+                "frameRate": 60,
+                "bitrate": 6000000
+            },
+            "720p30": {
+                "width": 1280,
+                "height": 720,
+                "frameRate": 30,
+                "bitrate": 3000000
+            }
+        }
+    },
+    "discovery": {
+        "enabled": true,
+        "serviceName": "LocalStream",
+        "serviceType": "http"
+    }
+}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStream Viewer - Debug</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: monospace;
+        }
+
+        #remoteVideo {
+            width: 100%;
+            height: 70vh;
+            object-fit: contain;
+            display: block;
+            background: #111;
+        }
+
+        #debug {
+            padding: 20px;
+            background: #1a1a1a;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .success {
+            color: #0f0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .warning {
+            color: #ff0;
+        }
+
+        .info {
+            color: #0ff;
+        }
+    </style>
+</head>
+
+<body>
+    <video id="remoteVideo" autoplay playsinline muted controls></video>
+    <div id="debug">
+        <h3>🔍 Debug Info</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../shared/webrtc-client.js"></script>
+    <script>
+        const video = document.getElementById('remoteVideo');
+        const logs = document.getElementById('logs');
+
+        function log(msg, type = 'info') {
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.appendChild(line);
+            logs.scrollTop = logs.scrollHeight;
+            console.log(msg);
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const streamId = params.get('stream');
+
+        log(`Stream ID: ${streamId}`, 'info');
+
+        if (!streamId) {
+            log('ERROR: No stream ID in URL!', 'error');
+        }
+
+        let socket, webrtcClient, config;
+
+        fetch('/api/config')
+            .then(r => r.json())
+            .then(data => {
+                config = data;
+                log('Config loaded', 'success');
+                connectToServer();
+            })
+            .catch(err => log('Config load failed: ' + err, 'error'));
+
+        function connectToServer() {
+            socket = io();
+
+            socket.on('connect', () => {
+                log('✅ Socket connected: ' + socket.id, 'success');
+                initWebRTC();
+                socket.emit('register-viewer', { streamId });
+            });
+
+            socket.on('registered', async (data) => {
+                log('✅ Registered as viewer', 'success');
+                log('Streamer socket: ' + data.streamerSocketId, 'info');
+
+                if (data.streamerSocketId) {
+                    try {
+                        const offer = await webrtcClient.createOffer(data.streamerSocketId);
+                        socket.emit('offer', { to: data.streamerSocketId, offer, streamId });
+                        log('📤 Offer sent', 'success');
+                    } catch (err) {
+                        log('❌ Offer failed: ' + err, 'error');
+                    }
+                } else {
+                    log('⚠️ No streamer found!', 'warning');
+                }
+            });
+
+            socket.on('answer', async (data) => {
+                log('📥 Answer received', 'success');
+                try {
+                    await webrtcClient.handleAnswer(data.answer);
+                    log('✅ Answer processed', 'success');
+                } catch (err) {
+                    log('❌ Answer failed: ' + err, 'error');
+                }
+            });
+
+            socket.on('ice-candidate', async (data) => {
+                if (webrtcClient && data.candidate) {
+                    await webrtcClient.handleIceCandidate(data.candidate);
+                    log('📥 ICE candidate received', 'info');
+                }
+            });
+
+            socket.on('error', (data) => {
+                log('❌ Server error: ' + data.message, 'error');
+            });
+
+            socket.on('disconnect', () => {
+                log('❌ Socket disconnected', 'error');
+            });
+        }
+
+        function initWebRTC() {
+            webrtcClient = new WebRTCClient({
+                iceServers: config.webrtc.iceServers,
+                onRemoteStream: (stream) => {
+                    log('📥 Remote stream received!', 'success');
+                    log('Tracks: ' + stream.getTracks().map(t => t.kind).join(', '), 'info');
+
+                    video.srcObject = stream;
+
+                    // Log video track info
+                    const videoTrack = stream.getVideoTracks()[0];
+                    if (videoTrack) {
+                        const settings = videoTrack.getSettings();
+                        log(`Video: ${settings.width}x${settings.height} @ ${settings.frameRate}fps`, 'success');
+                    }
+
+                    video.play()
+                        .then(() => log('✅ Video playing', 'success'))
+                        .catch(err => {
+                            log('⚠️ Autoplay blocked: ' + err.message, 'warning');
+                            log('Click video to play', 'warning');
+                        });
+                },
+                onConnectionStateChange: (state) => {
+                    log('Connection state: ' + state, state === 'connected' ? 'success' : 'info');
+                }
+            });
+
+            webrtcClient.socket = socket;
+            webrtcClient.initPeerConnection();
+            webrtcClient.handleRemoteStream();
+
+            log('WebRTC client initialized', 'success');
+        }
+
+        // Click to unmute
+        video.addEventListener('click', () => {
+            video.muted = !video.muted;
+            log(video.muted ? '🔇 Muted' : '🔊 Unmuted', 'info');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+{
+    "name": "localstream",
+    "version": "1.0.0",
+    "description": "Local network WebRTC streaming for OBS",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "generate-cert": "openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost-cert.pem -days 365 -nodes -subj '/CN=localhost'",
+        "build": "pkg . --compress GZip",
+        "build:mac": "pkg . --targets node18-macos-x64 --compress GZip --output dist/LocalStream-mac",
+        "build:mac-arm": "pkg . --targets node18-macos-arm64 --compress GZip --output dist/LocalStream-mac-arm64",
+        "build:windows": "pkg . --targets node18-win-x64 --compress GZip --output dist/LocalStream-win.exe",
+        "build:linux": "pkg . --targets node18-linux-x64 --compress GZip --output dist/LocalStream-linux",
+        "build:all": "npm run build:mac && npm run build:mac-arm && npm run build:windows && npm run build:linux"
+    },
+    "pkg": {
+        "assets": [
+            "public/**/*",
+            "config.json",
+            "localhost-*.pem"
+        ],
+        "outputPath": "dist"
+    },
+    "keywords": [
+        "webrtc",
+        "streaming",
+        "obs",
+        "mobile",
+        "local-network"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.18.2",
+        "socket.io": "^4.7.2",
+        "bonjour-service": "^1.2.1",
+        "qrcode": "^1.5.3"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2",
+        "pkg": "^5.8.1"
+    }
+}

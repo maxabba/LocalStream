@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>LocalStream API Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1f2e;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .section {
+            background: #2a3040;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        pre {
+            background: #0a0e1a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        button {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #2d7fd9;
+        }
+
+        .success {
+            color: #00ff88;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 LocalStream API Test</h1>
+
+    <div class="section">
+        <h2>Server Health</h2>
+        <button onclick="testHealth()">Test /health</button>
+        <pre id="health-result">Click button to test...</pre>
+    </div>
+
+    <div class="section">
+        <h2>Configuration</h2>
+        <button onclick="testConfig()">Test /api/config</button>
+        <pre id="config-result">Click button to test...</pre>
+    </div>
+
+    <div class="section">
+        <h2>Active Streams</h2>
+        <button onclick="testStreams()">Test /api/streams</button>
+        <button onclick="autoRefresh()">Auto Refresh (5s)</button>
+        <pre id="streams-result">Click button to test...</pre>
+    </div>
+
+    <div class="section">
+        <h2>Socket.IO Connection</h2>
+        <button onclick="testSocketIO()">Connect Socket.IO</button>
+        <pre id="socket-result">Click button to test...</pre>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        let autoRefreshInterval;
+
+        async function testHealth() {
+            const result = document.getElementById('health-result');
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                result.innerHTML = `<span class="success">✅ SUCCESS</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ ERROR</span>\n${error.message}`;
+            }
+        }
+
+        async function testConfig() {
+            const result = document.getElementById('config-result');
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                result.innerHTML = `<span class="success">✅ SUCCESS</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ ERROR</span>\n${error.message}`;
+            }
+        }
+
+        async function testStreams() {
+            const result = document.getElementById('streams-result');
+            try {
+                const response = await fetch('/api/streams');
+                const data = await response.json();
+                const count = data.length;
+                result.innerHTML = `<span class="success">✅ SUCCESS - ${count} stream(s)</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ ERROR</span>\n${error.message}`;
+            }
+        }
+
+        function autoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                document.getElementById('streams-result').innerHTML = 'Auto refresh stopped';
+            } else {
+                testStreams();
+                autoRefreshInterval = setInterval(testStreams, 5000);
+                document.getElementById('streams-result').innerHTML = 'Auto refresh started (every 5s)...';
+            }
+        }
+
+        function testSocketIO() {
+            const result = document.getElementById('socket-result');
+
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                result.innerHTML = 'Disconnected';
+                return;
+            }
+
+            result.innerHTML = 'Connecting...';
+            socket = io();
+
+            socket.on('connect', () => {
+                result.innerHTML = `<span class="success">✅ Connected</span>\nSocket ID: ${socket.id}`;
+            });
+
+            socket.on('disconnect', () => {
+                result.innerHTML = '<span class="error">❌ Disconnected</span>';
+            });
+
+            socket.on('streams-updated', (streams) => {
+                result.innerHTML = `<span class="success">✅ Connected - Received update</span>\nSocket ID: ${socket.id}\nStreams: ${streams.length}\n${JSON.stringify(streams, null, 2)}`;
+            });
+
+            socket.on('connect_error', (error) => {
+                result.innerHTML = `<span class="error">❌ Connection Error</span>\n${error.message}`;
+            });
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testHealth();
+            testConfig();
+            testStreams();
+        };
+    </script>
+</body>
+
+</html>

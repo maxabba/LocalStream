@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStream - Desktop Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🎥</span>
+                <h1>LocalStream Control</h1>
+            </div>
+            <div class="header-actions">
+                <div class="server-info">
+                    <span class="server-label">Server:</span>
+                    <span class="server-url" id="serverUrl">-</span>
+                </div>
+                <button id="showQrBtn" class="btn btn-secondary btn-sm">
+                    📱 Show QR Code
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Quick Start -->
+            <section class="quick-start">
+                <h2>🚀 Quick Start</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Open Mobile App</h3>
+                            <p>Visit <strong id="mobileUrl">-</strong> on your mobile device</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Start Streaming</h3>
+                            <p>Allow camera access and tap "Start Streaming"</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Add to OBS</h3>
+                            <p>Copy the viewer URL and add as Browser Source in OBS</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Streams -->
+            <section class="streams-section">
+                <div class="section-header">
+                    <h2>📹 Active Streams</h2>
+                    <span class="stream-count" id="streamCount">0 streams</span>
+                </div>
+
+                <div id="streamsContainer" class="streams-grid">
+                    <div class="empty-state">
+                        <div class="empty-icon">📱</div>
+                        <h3>No Active Streams</h3>
+                        <p>Start streaming from a mobile device to see it here</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OBS Integration Guide -->
+            <section class="obs-guide">
+                <h2>🎬 OBS Integration Guide</h2>
+                <div class="guide-steps">
+                    <div class="guide-step">
+                        <div class="guide-icon">➕</div>
+                        <div class="guide-content">
+                            <h3>Add Browser Source</h3>
+                            <p>In OBS, click the + button in Sources and select "Browser"</p>
+                        </div>
+                    </div>
+                    <div class="guide-step">
+                        <div class="guide-icon">🔗</div>
+                        <div class="guide-content">
+                            <h3>Paste Viewer URL</h3>
+                            <p>Copy the viewer URL from the stream card and paste it in OBS</p>
+                        </div>
+                    </div>
+                    <div class="guide-step">
+                        <div class="guide-icon">⚙️</div>
+                        <div class="guide-content">
+                            <h3>Configure Settings</h3>
+                            <p>Set Width: 1920, Height: 1080, FPS: 60 (or match your stream quality)</p>
+                        </div>
+                    </div>
+                    <div class="guide-step">
+                        <div class="guide-icon">✅</div>
+                        <div class="guide-content">
+                            <h3>Done!</h3>
+                            <p>Your mobile camera is now a source in OBS</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>LocalStream v1.0 - High-Quality Local Network Streaming</p>
+        </footer>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📱 Scan to Connect</h2>
+                <button class="modal-close" id="closeQrModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="qrCode" class="qr-code"></div>
+                <p class="qr-url" id="qrUrl">-</p>
+                <p class="qr-hint">Scan this QR code with your mobile device to open the streamer app</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../shared/utils.js"></script>
+    <script src="desktop.js"></script>
+</body>
+
+</html>

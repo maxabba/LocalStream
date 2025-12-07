@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>LocalStream - Mobile Streamer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">📹</span>
+        <h1>LocalStream</h1>
+      </div>
+      <div class="status-indicator" id="connectionStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">Disconnected</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Controls -->
+      <div class="controls">
+        <!-- Quality Preset -->
+        <div class="control-group">
+          <label for="qualityPreset">Quality Preset</label>
+          <select id="qualityPreset" class="select-input">
+            <option value="4k60">4K 60fps</option>
+            <option value="1080p60" selected>1080p 60fps</option>
+            <option value="1080p30">1080p 30fps</option>
+            <option value="720p60">720p 60fps</option>
+            <option value="720p30">720p 30fps</option>
+          </select>
+        </div>
+
+        <!-- Camera Selection -->
+        <div class="control-group">
+          <label for="cameraSelect">Camera</label>
+          <select id="cameraSelect" class="select-input">
+            <option value="user">Front Camera</option>
+            <option value="environment">Back Camera</option>
+          </select>
+        </div>
+
+        <!-- Stream Name -->
+        <div class="control-group">
+          <label for="streamName">Stream Name</label>
+          <input type="text" id="streamName" class="text-input" placeholder="My Camera" value="Mobile Camera">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+          <button id="startBtn" class="btn btn-primary">
+            <span class="btn-icon">▶️</span>
+            Start Streaming
+          </button>
+          <button id="stopBtn" class="btn btn-danger" style="display: none;">
+            <span class="btn-icon">⏹️</span>
+            Stop Streaming
+          </button>
+        </div>
+
+        <!-- Viewer URL -->
+        <div id="viewerUrlContainer" class="viewer-url-container" style="display: none;">
+          <label>OBS Browser Source URL:</label>
+          <div class="url-display">
+            <input type="text" id="viewerUrl" class="url-input" readonly>
+            <button id="copyUrlBtn" class="btn btn-secondary btn-sm">
+              📋 Copy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Preview -->
+      <div class="video-container" id="videoContainer">
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen Preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg>
+        </div>
+        <div class="video-overlay">
+          <div class="stream-info" id="streamInfo">
+            <div class="info-item">
+              <span class="info-label">Resolution</span>
+              <span class="info-value" id="resolution">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">FPS</span>
+              <span class="info-value" id="fps">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Bitrate</span>
+              <span class="info-value" id="bitrate">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Latency</span>
+              <span class="info-value" id="latency">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fullscreen Preview Overlay -->
+      <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="fullscreen-header">
+          <button class="exit-fullscreen" id="exitFullscreen">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+            Exit
+          </button>
+          <button class="toggle-controls" id="toggleControls">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v6m0 6v6M1 12h6m6 0h6" />
+            </svg>
+            Controls
+          </button>
+        </div>
+        <video id="fullscreenVideo" autoplay playsinline muted></video>
+
+        <!-- Camera Controls Panel -->
+        <div class="camera-controls" id="cameraControls">
+          <h3>Camera Settings</h3>
+
+          <div class="control-group">
+            <label for="brightness">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+              Brightness
+              <span class="control-value" id="brightnessValue">0</span>
+            </label>
+            <input type="range" id="brightness" min="-1" max="1" step="0.1" value="0">
+          </div>
+
+          <div class="control-group">
+            <label for="contrast">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2v20" />
+              </svg>
+              Contrast
+              <span class="control-value" id="contrastValue">1</span>
+            </label>
+            <input type="range" id="contrast" min="0.5" max="2" step="0.1" value="1">
+          </div>
+
+          <div class="control-group">
+            <label for="saturation">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>
+              Saturation
+              <span class="control-value" id="saturationValue">1</span>
+            </label>
+            <input type="range" id="saturation" min="0" max="2" step="0.1" value="1">
+          </div>
+
+          <div class="control-group">
+            <label for="whiteBalance">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8" />
+              </svg>
+              White Balance
+              <span class="control-value" id="whiteBalanceValue">Auto</span>
+            </label>
+            <select id="whiteBalance">
+              <option value="auto">Auto</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+
+          <div class="control-group" id="colorTempGroup" style="display: none;">
+            <label for="colorTemperature">
+              Color Temperature
+              <span class="control-value" id="colorTempValue">6500K</span>
+            </label>
+            <input type="range" id="colorTemperature" min="2500" max="9000" step="100" value="6500">
+          </div>
+
+          <button class="reset-controls" id="resetControls">Reset All</button>
+        </div>
+      </div>
+
+      <!-- Stats Panel -->
+      <div class="stats-panel" id="statsPanel" style="display: none;">
+        <h3>📊 Advanced Statistics</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Connection State</span>
+            <span class="stat-value" id="connState">-</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">ICE State</span>
+            <span class="stat-value" id="iceState">-</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Packets Lost</span>
+            <span class="stat-value" id="packetsLost">-</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Viewers</span>
+            <span class="stat-value" id="viewers">0</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>🌐 Connected to LocalStream Server</p>
+      <button id="toggleStats" class="btn-link">Show Advanced Stats</button>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="../shared/utils.js"></script>
+  <script src="../shared/webrtc-client.js"></script>
+  <script src="streamer.js"></script>
+</body>
+
+</html>
