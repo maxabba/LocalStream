@@ -8,6 +8,7 @@ High-quality, low-latency local network streaming from mobile devices to OBS Stu
 - 🎥 **OBS Integration** - Direct integration with OBS Studio via Browser Source
 - ⚡ **Ultra-Low Latency** - <100ms latency on local network
 - 🎨 **Advanced Camera Controls** - Brightness, contrast, saturation, white balance
+- ⛶ **Fullscreen Preview** - Professional monitoring mode with overlay controls
 - 📊 **Real-time Statistics** - Monitor FPS, bitrate, resolution, and latency
 - 🌐 **Cross-Platform** - Works on macOS, Windows, and Linux
 - 🔒 **HTTPS Support** - Secure connections for iOS camera access
@@ -30,14 +31,14 @@ npm start
 
 ### Option 2: Standalone Executable (No Node.js Required)
 
-Download the appropriate executable for your platform from the [releases page](#):
+Download the appropriate zip file for your platform from the [releases page](https://github.com/maxabba/LocalStream/releases):
 
-- **macOS Intel**: `LocalStream-mac`
-- **macOS Apple Silicon**: `LocalStream-mac-arm64`
-- **Windows**: `LocalStream-win.exe`
-- **Linux**: `LocalStream-linux`
+- **macOS Intel**: `LocalStream-macos-intel.zip`
+- **macOS Apple Silicon**: `LocalStream-macos-silicon.zip`
+- **Windows**: `LocalStream-windows.zip`
+- **Linux**: `LocalStream-linux.zip`
 
-Then simply run it!
+Then simply unzip and run!
 
 ## Usage
 
@@ -51,6 +52,7 @@ Then simply run it!
    - Allow camera and microphone access
    - Configure quality and camera
    - Click "Start Streaming"
+   - **Tip:** Use the fullscreen icon for a better monitoring experience and access advanced controls!
 
 3. **Add to OBS**
    - In OBS, add a Browser Source
@@ -64,7 +66,7 @@ Then simply run it!
 See [BUILD.md](docs/BUILD.md) for detailed instructions on creating standalone executables.
 
 ```bash
-# Build for all platforms
+# Build for all platforms (automatically creates zips)
 npm run build:all
 
 # Or build for specific platform
@@ -171,6 +173,6 @@ For issues and questions:
 
 ---
 
-**Version**: 1.0.0  
+**Version**: 1.0.3  
 **Author**: LocalStream Team  
 **Last Updated**: 2025-12-07
