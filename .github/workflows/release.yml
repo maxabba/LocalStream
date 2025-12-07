@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-release:
     name: Build and Release
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: write
 
@@ -34,6 +34,11 @@ jobs:
           npx pkg . --targets node18-macos-arm64 --compress GZip --output dist/LocalStream-mac-arm64
           npx pkg . --targets node18-win-x64 --compress GZip --output dist/LocalStream-win.exe
           npx pkg . --targets node18-linux-x64 --compress GZip --output dist/LocalStream-linux
+
+      - name: Sign macOS Binaries
+        run: |
+          codesign --force -s - dist/LocalStream-mac
+          codesign --force -s - dist/LocalStream-mac-arm64
 
       - name: Compress Executables
         run: |
