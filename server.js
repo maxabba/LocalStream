@@ -62,7 +62,20 @@ if (useHttps) {
 
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve specific pages for clean URLs
+app.get('/desktop', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/desktop/index.html'));
+});
+
+app.get('/mobile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/mobile/index.html'));
+});
+
+app.get('/viewer', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/viewer/index.html'));
+});
 
 // Store active streams and connections
 const streams = new Map();
