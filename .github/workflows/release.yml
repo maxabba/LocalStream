@@ -28,25 +28,10 @@ jobs:
       - name: Generate SSL certificates
         run: npm run generate-cert
 
-      - name: Build Executables
-        run: |
-          npx pkg . --targets node18-macos-x64 --compress GZip --output dist/LocalStream-mac
-          npx pkg . --targets node18-macos-arm64 --compress GZip --output dist/LocalStream-mac-arm64
-          npx pkg . --targets node18-win-x64 --compress GZip --output dist/LocalStream-win.exe
-          npx pkg . --targets node18-linux-x64 --compress GZip --output dist/LocalStream-linux
-
-      - name: Sign macOS Binaries
-        run: |
-          codesign --force -s - dist/LocalStream-mac
-          codesign --force -s - dist/LocalStream-mac-arm64
-
-      - name: Compress Executables
-        run: |
-          cd dist
-          zip LocalStream-macos-intel.zip LocalStream-mac
-          zip LocalStream-macos-silicon.zip LocalStream-mac-arm64
-          zip LocalStream-linux.zip LocalStream-linux
-          zip LocalStream-windows.zip LocalStream-win.exe
+      - name: Build Electron Apps
+        run: npm run build:all
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -54,21 +39,29 @@ jobs:
           files: dist/*.zip
           body: |
             ## LocalStream Release ${{ github.ref_name }}
-            
+
             ### Downloads
-            
-            - **macOS (Intel)**: `LocalStream-macos-intel.zip`
-            - **macOS (Apple Silicon)**: `LocalStream-macos-silicon.zip`
-            - **Windows**: `LocalStream-windows.zip`
-            - **Linux**: `LocalStream-linux.zip`
-            
+
+            - **macOS (Intel)**: `LocalStream-${{ github.ref_name }}-mac-x64.zip`
+            - **macOS (Apple Silicon/M1)**: `LocalStream-${{ github.ref_name }}-mac-arm64.zip`
+            - **Windows (x64)**: `LocalStream-${{ github.ref_name }}-win-x64.zip`
+            - **Linux (x64)**: `LocalStream-${{ github.ref_name }}-linux-x64.zip`
+
             ### Installation
-            
+
             1. Download and unzip the file for your platform
-            2. Run the executable inside
-            
+            2. Launch the LocalStream application
+            3. Click "Start Server" to begin streaming
+
+            ### Features
+            - 🖥️ Desktop GUI for easy server control
+            - 📱 QR code generation for mobile devices
+            - 🔒 HTTPS support with auto-generated certificates
+            - 🎥 WebRTC streaming optimized for OBS
+            - 🌐 Automatic network discovery with mDNS
+
             ### Notes
-            - Creates a server on http://localhost:3000 and https://localhost:3443
+            - Server runs on http://localhost:3000 and https://localhost:3443
             - Check README.md for OBS setup instructions
           draft: false
           prerelease: false

@@ -9,6 +9,13 @@ const path = require('path');
 const os = require('os');
 const config = require('./config.json');
 
+// Custom logger support for GUI integration
+let customLogger = null;
+function log(message) {
+    console.log(message);
+    if (customLogger) customLogger(message);
+}
+
 const app = express();
 
 // Try to create HTTPS server with self-signed certificates
@@ -22,10 +29,10 @@ try {
     };
     httpsServer = https.createServer(httpsOptions, app);
     useHttps = true;
-    console.log('✅ HTTPS certificates found - iOS/Safari support enabled');
+    log('✅ HTTPS certificates found - iOS/Safari support enabled');
 } catch (error) {
-    console.log('⚠️  HTTPS certificates not found - using HTTP only');
-    console.log('   iOS/Safari will not work over network. Run: npm run generate-cert');
+    log('⚠️  HTTPS certificates not found - using HTTP only');
+    log('   iOS/Safari will not work over network. Run: npm run generate-cert');
 }
 
 // Always create HTTP server for local access
@@ -82,37 +89,10 @@ const httpURL = `http://${localIP}:${httpPort}`;
 const httpsURL = `https://${localIP}:${httpsPort}`;
 const serverURL = useHttps ? httpsURL : httpURL;
 
-console.log('\n🚀 LocalStream Server Starting...\n');
+// Initial setup logs moved to startServer() function
 
-if (useHttps) {
-    console.log('🔒 HTTPS Mode (iOS/Safari Compatible)');
-    console.log(`📱 Mobile Streamer: ${httpsURL}/mobile`);
-    console.log(`💻 Desktop Control: ${httpsURL}/desktop`);
-    console.log(`🎥 OBS Viewer: ${httpsURL}/viewer?stream=<stream-id>`);
-    console.log(`\n📝 Note: Accept the security warning on first visit\n`);
-} else {
-    console.log('⚠️  HTTP Mode (Desktop only - iOS will not work)');
-    console.log(`📱 Mobile Streamer: ${httpURL}/mobile`);
-    console.log(`💻 Desktop Control: ${httpURL}/desktop`);
-    console.log(`🎥 OBS Viewer: ${httpURL}/viewer?stream=<stream-id>`);
-    console.log(`\n⚠️  To enable iOS support, run: npm run generate-cert\n`);
-}
-
-// Bonjour/mDNS service for auto-discovery
-let bonjourService;
-if (config.discovery.enabled) {
-    const bonjour = new Bonjour.Bonjour();
-    bonjourService = bonjour.publish({
-        name: config.discovery.serviceName,
-        type: config.discovery.serviceType,
-        port: config.server.port,
-        txt: {
-            path: '/',
-            version: '1.0.0'
-        }
-    });
-    console.log(`🔍 mDNS Service Published: ${config.discovery.serviceName}\n`);
-}
+// Bonjour/mDNS service for auto-discovery (initialized in startServer)
+let bonjourService = null;
 
 // REST API Endpoints
 
@@ -167,7 +147,7 @@ app.get('/api/qr/mobile', async (req, res) => {
 
 // WebRTC Signaling via Socket.IO
 io.on('connection', (socket) => {
-    console.log(`✅ Client connected: ${socket.id}`);
+    log(`✅ Client connected: ${socket.id}`);
 
     // Register as streamer
     socket.on('register-streamer', (data) => {
@@ -190,7 +170,7 @@ io.on('connection', (socket) => {
         socket.streamId = streamId;
         socket.role = 'streamer';
 
-        console.log(`📹 Streamer registered: ${stream.name} (${streamId})`);
+        log(`📹 Streamer registered: ${stream.name} (${streamId})`);
 
         // Use HTTP URL for better OBS compatibility
         socket.emit('registered', {
@@ -212,7 +192,7 @@ io.on('connection', (socket) => {
             const stream = streams.get(streamId);
             stream.viewers++;
 
-            console.log(`👁️  Viewer connected to: ${stream.name} (${streamId})`);
+            log(`👁️  Viewer connected to: ${stream.name} (${streamId})`);
 
             // Get streamer socket
             const streamerSocket = Array.from(io.sockets.sockets.values())
@@ -233,7 +213,7 @@ io.on('connection', (socket) => {
     // WebRTC Signaling: Offer
     socket.on('offer', (data) => {
         const { to, offer, streamId } = data;
-        console.log(`📤 Forwarding offer from ${socket.id} to ${to}`);
+        log(`📤 Forwarding offer from ${socket.id} to ${to}`);
         io.to(to).emit('offer', {
             from: socket.id,
             offer,
@@ -244,7 +224,7 @@ io.on('connection', (socket) => {
     // WebRTC Signaling: Answer
     socket.on('answer', (data) => {
         const { to, answer } = data;
-        console.log(`📤 Forwarding answer from ${socket.id} to ${to}`);
+        log(`📤 Forwarding answer from ${socket.id} to ${to}`);
         io.to(to).emit('answer', {
             from: socket.id,
             answer
@@ -271,13 +251,13 @@ io.on('connection', (socket) => {
 
     // Disconnect
     socket.on('disconnect', () => {
-        console.log(`❌ Client disconnected: ${socket.id}`);
+        log(`❌ Client disconnected: ${socket.id}`);
 
         if (socket.streamId) {
             const stream = streams.get(socket.streamId);
 
             if (socket.role === 'streamer') {
-                console.log(`📹 Streamer disconnected: ${stream?.name}`);
+                log(`📹 Streamer disconnected: ${stream?.name}`);
                 streams.delete(socket.streamId);
             } else if (socket.role === 'viewer' && stream) {
                 stream.viewers = Math.max(0, stream.viewers - 1);
@@ -288,43 +268,142 @@ io.on('connection', (socket) => {
     });
 });
 
-// Start servers
-if (useHttps) {
-    // Start HTTPS server (main server for iOS)
-    httpsServer.listen(httpsPort, config.server.host, () => {
-        console.log(`✨ HTTPS Server running on port ${httpsPort}`);
-        console.log(`🌐 Access from network: ${httpsURL}\n`);
-    });
+// Exported functions for programmatic control (Electron GUI)
+let serverInstances = { http: null, https: null };
 
-    // Also start HTTP server for redirects and compatibility
-    httpServer.listen(httpPort, config.server.host, () => {
-        console.log(`📡 HTTP Server running on port ${httpPort} (redirects to HTTPS)`);
-    });
-} else {
-    // HTTP only mode
-    httpServer.listen(httpPort, config.server.host, () => {
-        console.log(`✨ HTTP Server running on port ${httpPort}`);
-        console.log(`🌐 Access from network: ${httpURL}\n`);
+function startServer(logger) {
+    if (logger) customLogger = logger;
+
+    return new Promise((resolve, reject) => {
+        try {
+            log('\n🚀 LocalStream Server Starting...\n');
+
+            if (useHttps) {
+                log('🔒 HTTPS Mode (iOS/Safari Compatible)');
+                log(`📱 Mobile Streamer: ${httpsURL}/mobile`);
+                log(`💻 Desktop Control: ${httpsURL}/desktop`);
+                log(`🎥 OBS Viewer: ${httpsURL}/viewer?stream=<stream-id>`);
+                log(`\n📝 Note: Accept the security warning on first visit\n`);
+            } else {
+                log('⚠️  HTTP Mode (Desktop only - iOS will not work)');
+                log(`📱 Mobile Streamer: ${httpURL}/mobile`);
+                log(`💻 Desktop Control: ${httpURL}/desktop`);
+                log(`🎥 OBS Viewer: ${httpURL}/viewer?stream=<stream-id>`);
+                log(`\n⚠️  To enable iOS support, run: npm run generate-cert\n`);
+            }
+
+            const startPromises = [];
+
+            if (useHttps) {
+                startPromises.push(new Promise((res) => {
+                    serverInstances.https = httpsServer.listen(httpsPort, config.server.host, () => {
+                        log(`✨ HTTPS Server running on port ${httpsPort}`);
+                        log(`🌐 Access from network: ${httpsURL}\n`);
+                        res();
+                    });
+                }));
+
+                startPromises.push(new Promise((res) => {
+                    serverInstances.http = httpServer.listen(httpPort, config.server.host, () => {
+                        log(`📡 HTTP Server running on port ${httpPort} (redirects to HTTPS)`);
+                        res();
+                    });
+                }));
+            } else {
+                startPromises.push(new Promise((res) => {
+                    serverInstances.http = httpServer.listen(httpPort, config.server.host, () => {
+                        log(`✨ HTTP Server running on port ${httpPort}`);
+                        log(`🌐 Access from network: ${httpURL}\n`);
+                        res();
+                    });
+                }));
+            }
+
+            Promise.all(startPromises).then(() => {
+                // Start Bonjour/mDNS service after servers are running
+                if (config.discovery.enabled && !bonjourService) {
+                    const bonjour = new Bonjour.Bonjour();
+                    bonjourService = bonjour.publish({
+                        name: config.discovery.serviceName,
+                        type: config.discovery.serviceType,
+                        port: httpPort,
+                        txt: { path: '/', version: '1.0.0' }
+                    });
+                    log(`🔍 mDNS Service Published: ${config.discovery.serviceName}\n`);
+                }
+
+                resolve({ httpPort, httpsPort: useHttps ? httpsPort : null, localIP });
+            });
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-    console.log('\n🛑 Shutting down gracefully...');
-    if (bonjourService) {
-        bonjourService.stop();
-    }
+function stopServer() {
+    return new Promise((resolve) => {
+        log('\n🛑 Shutting down server...');
 
-    const closeServers = [];
-    if (useHttps && httpsServer) {
-        closeServers.push(new Promise(resolve => httpsServer.close(resolve)));
-    }
-    if (httpServer) {
-        closeServers.push(new Promise(resolve => httpServer.close(resolve)));
-    }
+        // Disconnect all Socket.IO clients
+        if (io) {
+            io.disconnectSockets();
+            log('🔌 Disconnected all Socket.IO clients');
+        }
 
-    Promise.all(closeServers).then(() => {
-        console.log('👋 Servers closed');
-        process.exit(0);
+        // Stop Bonjour service
+        if (bonjourService) {
+            bonjourService.stop();
+            bonjourService = null;
+            log('🔍 Stopped mDNS service');
+        }
+
+        // Close HTTP/HTTPS servers with timeout
+        const closePromises = [];
+
+        if (serverInstances.https) {
+            closePromises.push(new Promise(res => {
+                const timeout = setTimeout(() => {
+                    log('⚠️ HTTPS server close timeout, forcing shutdown');
+                    res();
+                }, 2000);
+
+                serverInstances.https.close(() => {
+                    clearTimeout(timeout);
+                    res();
+                });
+            }));
+        }
+
+        if (serverInstances.http) {
+            closePromises.push(new Promise(res => {
+                const timeout = setTimeout(() => {
+                    log('⚠️ HTTP server close timeout, forcing shutdown');
+                    res();
+                }, 2000);
+
+                serverInstances.http.close(() => {
+                    clearTimeout(timeout);
+                    res();
+                });
+            }));
+        }
+
+        Promise.all(closePromises).then(() => {
+            log('👋 Servers closed');
+            serverInstances = { http: null, https: null };
+            resolve();
+        });
     });
-});
+}
+
+// CLI mode - only run if executed directly
+if (require.main === module) {
+    startServer(null);
+
+    process.on('SIGINT', () => {
+        stopServer().then(() => process.exit(0));
+    });
+}
+
+// Export for programmatic use (Electron)
+module.exports = { startServer, stopServer };
