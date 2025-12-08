@@ -33,6 +33,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Remove quarantine attribute from macOS builds
+        run: |
+          if [ -d "dist/mac" ]; then
+            xattr -cr dist/mac/*.app 2>/dev/null || true
+          fi
+          if [ -d "dist/mac-arm64" ]; then
+            xattr -cr dist/mac-arm64/*.app 2>/dev/null || true
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -49,6 +58,13 @@ jobs:
 
             ### Installation
 
+            **macOS:**
+            1. Download and unzip the file for your platform
+            2. Right-click on LocalStream.app and select "Open"
+            3. Click "Open" in the security dialog
+            4. Click "Start Server" to begin streaming
+
+            **Windows/Linux:**
             1. Download and unzip the file for your platform
             2. Launch the LocalStream application
             3. Click "Start Server" to begin streaming
