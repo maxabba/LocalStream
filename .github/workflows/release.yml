@@ -31,19 +31,40 @@ jobs:
       - name: Generate app icons
         run: npm run generate-icons
 
+      - name: Import Apple Developer Certificate
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          # Decode certificate and save to file
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate to keychain
+          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Add keychain to search list
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Clean up certificate file
+          rm -f certificate.p12
+
       - name: Build Electron Apps
         run: npm run build:all
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Remove quarantine attribute from macOS builds
-        run: |
-          if [ -d "dist/mac" ]; then
-            xattr -cr dist/mac/*.app 2>/dev/null || true
-          fi
-          if [ -d "dist/mac-arm64" ]; then
-            xattr -cr dist/mac-arm64/*.app 2>/dev/null || true
-          fi
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -63,9 +84,8 @@ jobs:
 
             **macOS:**
             1. Download and unzip the file for your platform
-            2. Right-click on LocalStream.app and select "Open"
-            3. Click "Open" in the security dialog
-            4. Click "Start Server" to begin streaming
+            2. Double-click LocalStream.app to launch (app is signed and notarized)
+            3. Click "Start Server" to begin streaming
 
             **Windows/Linux:**
             1. Download and unzip the file for your platform
