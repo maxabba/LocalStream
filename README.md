@@ -139,6 +139,21 @@ OBS Studio (Browser Source)
 - **Bitrate**: Adaptive 1-20 Mbps
 - **CPU**: Low (hardware encoding when available)
 
+## Audio Support (Disabled by Default)
+
+**Note:** Audio is currently **DISABLED** by default to optimize network bandwidth and stability for multi-device streaming (Video-Only Mode).
+
+If you need audio, you can re-enable it by editing `public/mobile/streamer.js`:
+
+1. Open `public/mobile/streamer.js`
+2. Find the `getUserMedia` constraints (around line 295 and 465):
+   ```javascript
+   // Change audio: false to true
+   audio: true 
+   ```
+3. Restart the server (`npm start`) and reload the mobile page.
+
+
 ## Troubleshooting
 
 ### iOS Camera Not Working
