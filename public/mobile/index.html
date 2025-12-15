@@ -32,11 +32,9 @@
         <div class="control-group">
           <label for="qualityPreset">Quality Preset</label>
           <select id="qualityPreset" class="select-input">
-            <option value="2k30">2K 30fps (8 Mbps)</option>
-            <option value="1080p30" selected>1080p 30fps (6 Mbps)</option>
-            <option value="1080p25">1080p 25fps (5 Mbps)</option>
-            <option value="720p30">720p 30fps (4 Mbps)</option>
-            <option value="720p25">720p 25fps (3 Mbps)</option>
+            <option value="720p30">720p 30fps (8-12 Mbps)</option>
+            <option value="1080p30" selected>1080p 30fps (15-25 Mbps)</option>
+            <option value="4k30">4K 30fps (50-80 Mbps)</option>
           </select>
         </div>
 
@@ -236,6 +234,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="../shared/utils.js"></script>
   <script src="../shared/webrtc-client.js"></script>
+  <script src="../shared/bandwidth-tester.js"></script>
   <script src="streamer.js"></script>
 </body>
 

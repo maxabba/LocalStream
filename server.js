@@ -88,6 +88,10 @@ app.get('/viewer', (req, res) => {
 const streams = new Map();
 const rooms = new Map();
 
+// Initialize bandwidth manager
+const BandwidthManager = require('./bandwidth-manager');
+const bandwidthManager = new BandwidthManager();
+
 // Helper to get local IP address
 function getLocalIP() {
     const interfaces = os.networkInterfaces();
@@ -186,15 +190,31 @@ io.on('connection', (socket) => {
     // Register as streamer
     socket.on('register-streamer', (data) => {
         const streamId = data.streamId || `stream-${Date.now()}`;
+        const quality = data.quality || '1080p30';
+
+        // Check if new streamer can be accepted based on available bandwidth
+        const acceptance = bandwidthManager.canAcceptNewStreamer(quality, streamId);
+
+        if (!acceptance.allowed) {
+            log(`❌ Streamer rejected: insufficient bandwidth for ${quality}`);
+            socket.emit('bandwidth-insufficient', {
+                required: acceptance.required,
+                available: acceptance.available,
+                message: acceptance.message
+            });
+            return; // REJECT connection
+        }
+
         const stream = {
             id: streamId,
             name: data.name || `Camera ${streams.size + 1}`,
             socketId: socket.id,
             status: 'active',
             viewers: 0,
+            quality: quality,
             createdAt: new Date().toISOString(),
             stats: {
-                bitrate: 0,
+                bitrate: acceptance.allocatedBitrate,
                 fps: 0,
                 resolution: data.resolution || 'unknown'
             }
@@ -204,25 +224,45 @@ io.on('connection', (socket) => {
         socket.streamId = streamId;
         socket.role = 'streamer';
 
-        log(`📹 Streamer registered: ${stream.name} (${streamId})`);
+        log(`📹 Streamer registered: ${stream.name} (${streamId}) at ${(acceptance.allocatedBitrate / 1_000_000).toFixed(2)} Mbps`);
 
-        // ✅ Track initial bitrate for Network Monitor
-        // Try to get bitrate from preset, otherwise fallback to provided value or default
-        let initialBitrate = 6000000;
-        if (data.quality && config.video && config.video.presets && config.video.presets[data.quality]) {
-            initialBitrate = config.video.presets[data.quality].bitrate;
-        }
-        activeStreams.set(socket.id, initialBitrate);
+        // Add to bandwidth manager and reallocate
+        const newAllocations = bandwidthManager.addStreamer(streamId, quality, socket.id);
+
+        // Track initial bitrate for Network Monitor (legacy support)
+        activeStreams.set(socket.id, acceptance.allocatedBitrate);
         broadcastNetworkUsage();
+
+        // Notify existing streamers of bandwidth reallocation
+        newAllocations.forEach((bitrate, sid) => {
+            const streamerInfo = streams.get(sid);
+            if (streamerInfo && sid !== streamId) {
+                const streamerSocket = io.sockets.sockets.get(streamerInfo.socketId);
+                if (streamerSocket) {
+                    streamerSocket.emit('bandwidth-reallocated', {
+                        newBitrate: bitrate,
+                        reason: 'new_streamer_joined',
+                        activeStreamers: newAllocations.size
+                    });
+                    // Update stats
+                    streamerInfo.stats.bitrate = bitrate;
+                    activeStreams.set(streamerInfo.socketId, bitrate);
+                }
+            }
+        });
 
         // Use HTTP URL for better OBS compatibility
         socket.emit('registered', {
             streamId,
-            viewerURL: `${httpURL}/viewer?stream=${streamId}`
+            viewerURL: `${httpURL}/viewer?stream=${streamId}`,
+            allocatedBitrate: acceptance.allocatedBitrate
         });
 
         // Notify all clients about new stream
         io.emit('streams-updated', Array.from(streams.values()));
+
+        // Broadcast bandwidth status
+        io.emit('bandwidth-status', bandwidthManager.getStatus());
     });
 
     // Register as viewer
@@ -298,6 +338,67 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Bandwidth Test: Start
+    socket.on('bandwidth-test-start', () => {
+        log(`🧪 Bandwidth test started: ${socket.id}`);
+        socket.bandwidthTest = {
+            startTime: Date.now(),
+            uploadBytes: 0,
+            downloadBytes: 0
+        };
+    });
+
+    // Bandwidth Test: Upload chunk received
+    socket.on('bandwidth-test-upload', (data) => {
+        if (socket.bandwidthTest) {
+            socket.bandwidthTest.uploadBytes += data.size || 0;
+        }
+    });
+
+    // Bandwidth Test: Download chunk request
+    socket.on('bandwidth-test-download-request', () => {
+        if (socket.bandwidthTest) {
+            // Send a chunk of data back to client
+            const chunkSize = 64 * 1024; // 64 KB
+            const chunk = Buffer.alloc(chunkSize);
+
+            socket.emit('bandwidth-test-download-chunk', {
+                chunk: chunk,
+                size: chunkSize
+            });
+
+            socket.bandwidthTest.downloadBytes += chunkSize;
+        }
+    });
+
+    // Bandwidth Test: Complete
+    socket.on('bandwidth-test-complete', (data) => {
+        if (!socket.bandwidthTest) return;
+
+        const duration = Date.now() - socket.bandwidthTest.startTime;
+        const uploadMbps = (data.uploadBytes * 8) / (duration / 1000) / 1_000_000;
+        const downloadMbps = (data.downloadBytes * 8) / (duration / 1000) / 1_000_000;
+        const totalBandwidth = uploadMbps + downloadMbps;
+
+        log(`✅ Bandwidth test complete: ${socket.id}`);
+        log(`   Upload: ${uploadMbps.toFixed(2)} Mbps`);
+        log(`   Download: ${downloadMbps.toFixed(2)} Mbps`);
+        log(`   Total: ${totalBandwidth.toFixed(2)} Mbps`);
+
+        // Set total available bandwidth in manager
+        bandwidthManager.setTotalBandwidth(totalBandwidth);
+
+        // Send results back to client
+        socket.emit('bandwidth-test-result', {
+            upload: uploadMbps,
+            download: downloadMbps,
+            total: totalBandwidth
+        });
+
+        // Clean up test data
+        delete socket.bandwidthTest;
+    });
+
     // Disconnect
     socket.on('disconnect', () => {
         log(`❌ Client disconnected: ${socket.id}`);
@@ -311,6 +412,30 @@ io.on('connection', (socket) => {
             if (socket.role === 'streamer') {
                 log(`📹 Streamer disconnected: ${stream?.name}`);
                 streams.delete(socket.streamId);
+
+                // Remove from bandwidth manager and reallocate
+                const newAllocations = bandwidthManager.removeStreamer(socket.streamId);
+
+                // Notify remaining streamers of bandwidth reallocation
+                newAllocations.forEach((bitrate, sid) => {
+                    const streamerInfo = streams.get(sid);
+                    if (streamerInfo) {
+                        const streamerSocket = io.sockets.sockets.get(streamerInfo.socketId);
+                        if (streamerSocket) {
+                            streamerSocket.emit('bandwidth-reallocated', {
+                                newBitrate: bitrate,
+                                reason: 'streamer_disconnected',
+                                activeStreamers: newAllocations.size
+                            });
+                            // Update stats
+                            streamerInfo.stats.bitrate = bitrate;
+                            activeStreams.set(streamerInfo.socketId, bitrate);
+                        }
+                    }
+                });
+
+                // Broadcast updated bandwidth status
+                io.emit('bandwidth-status', bandwidthManager.getStatus());
             } else if (socket.role === 'viewer' && stream) {
                 stream.viewers = Math.max(0, stream.viewers - 1);
             }

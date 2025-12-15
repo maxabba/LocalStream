@@ -21,40 +21,38 @@
             "facingMode": "user"
         },
         "presets": {
-            "2k30": {
-                "width": 2560,
-                "height": 1440,
+            "720p30": {
+                "width": 1280,
+                "height": 720,
                 "frameRate": 30,
-                "bitrate": 8000000,
-                "description": "2K 30fps (8 Mbps)"
+                "bitrateMin": 8000000,
+                "bitrateMax": 12000000,
+                "bitrateIdeal": 10000000,
+                "bitrate": 10000000,
+                "encoder": "software",
+                "description": "720p 30fps (8-12 Mbps)"
             },
             "1080p30": {
                 "width": 1920,
                 "height": 1080,
                 "frameRate": 30,
-                "bitrate": 6000000,
-                "description": "1080p 30fps (6 Mbps)"
+                "bitrateMin": 15000000,
+                "bitrateMax": 25000000,
+                "bitrateIdeal": 20000000,
+                "bitrate": 20000000,
+                "encoder": "hardware",
+                "description": "1080p 30fps (15-25 Mbps)"
             },
-            "1080p25": {
-                "width": 1920,
-                "height": 1080,
-                "frameRate": 25,
-                "bitrate": 5000000,
-                "description": "1080p 25fps (5 Mbps)"
-            },
-            "720p30": {
-                "width": 1280,
-                "height": 720,
+            "4k30": {
+                "width": 3840,
+                "height": 2160,
                 "frameRate": 30,
-                "bitrate": 4000000,
-                "description": "720p 30fps (4 Mbps)"
-            },
-            "720p25": {
-                "width": 1280,
-                "height": 720,
-                "frameRate": 25,
-                "bitrate": 3000000,
-                "description": "720p 25fps (3 Mbps)"
+                "bitrateMin": 50000000,
+                "bitrateMax": 80000000,
+                "bitrateIdeal": 65000000,
+                "bitrate": 65000000,
+                "encoder": "hardware",
+                "description": "4K 30fps (50-80 Mbps)"
             }
         }
     },

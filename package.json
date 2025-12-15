@@ -1,6 +1,6 @@
 {
     "name": "localstream",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "description": "Local network WebRTC streaming for OBS",
     "main": "gui/main.js",
     "bin": {

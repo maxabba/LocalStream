@@ -12,6 +12,7 @@ class WebRTCClient {
         this.socket = null;
         this.iceServers = config.iceServers || [];
         this.maxBitrate = config.maxBitrate || 6000000; // ✅ NEW: Dynamic bitrate
+        this.serverTargetBitrate = null; // Server-commanded target bitrate
         this.onRemoteStream = config.onRemoteStream || (() => { });
         this.onConnectionStateChange = config.onConnectionStateChange || (() => { });
         this.onStats = config.onStats || (() => { });
@@ -274,7 +275,8 @@ class WebRTCClient {
                 highLossStart: 0,
                 lastRecovery: now,
                 currentBitrateCap: this.maxBitrate,
-                minBitrate: this.maxBitrate * 0.5 // Floor at 50%
+                minBitrate: this.serverTargetBitrate || this.maxBitrate * 0.5, // Floor at server target or 50%
+                serverTarget: this.serverTargetBitrate
             };
         }
 
@@ -333,6 +335,37 @@ class WebRTCClient {
                 }
             }
         });
+    }
+
+    /**
+     * Set target bitrate from server (gradual transition)
+     * @param {number} targetBitrate - Target bitrate in bps
+     */
+    async setTargetBitrate(targetBitrate) {
+        const currentBitrate = this.abrState?.currentBitrateCap || this.maxBitrate;
+        const steps = 10;
+        const stepSize = (targetBitrate - currentBitrate) / steps;
+
+        console.log(`🎯 Adjusting bitrate: ${(currentBitrate / 1000000).toFixed(2)} → ${(targetBitrate / 1000000).toFixed(2)} Mbps`);
+
+        // Gradual transition over 2 seconds (10 steps x 200ms)
+        for (let i = 1; i <= steps; i++) {
+            const newBitrate = currentBitrate + (stepSize * i);
+            await this.applyBitrateCap(newBitrate);
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        this.maxBitrate = targetBitrate;
+        this.serverTargetBitrate = targetBitrate;
+
+        // Update ABR state if exists
+        if (this.abrState) {
+            this.abrState.currentBitrateCap = targetBitrate;
+            this.abrState.minBitrate = targetBitrate * 0.5;
+            this.abrState.serverTarget = targetBitrate;
+        }
+
+        console.log(`✅ Bitrate adjusted to ${(targetBitrate / 1000000).toFixed(2)} Mbps`);
     }
 
     /**

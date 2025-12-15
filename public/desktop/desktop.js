@@ -81,6 +81,11 @@ function connectToServer() {
     renderStreams();
   });
 
+  socket.on('bandwidth-status', (data) => {
+    console.log('📊 Bandwidth status:', data);
+    updateBandwidthMonitor(data);
+  });
+
   socket.on('connect_error', (error) => {
     console.error('❌ Socket.IO connection error:', error);
   });
@@ -241,6 +246,23 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// Update bandwidth monitor UI
+function updateBandwidthMonitor(data) {
+  const totalBandwidthEl = document.getElementById('totalBandwidth');
+  const usedBandwidthEl = document.getElementById('usedBandwidth');
+  const availableBandwidthEl = document.getElementById('availableBandwidth');
+
+  if (totalBandwidthEl) {
+    totalBandwidthEl.textContent = `${data.totalBandwidth.toFixed(1)} Mbps`;
+  }
+  if (usedBandwidthEl) {
+    usedBandwidthEl.textContent = `${data.usedBandwidth.toFixed(1)} Mbps`;
+  }
+  if (availableBandwidthEl) {
+    availableBandwidthEl.textContent = `${data.availableBandwidth.toFixed(1)} Mbps`;
+  }
 }
 
 // Initialize on load

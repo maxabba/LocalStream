@@ -9,6 +9,8 @@ let localStream;
 let streamId;
 let config;
 let isStreaming = false;
+let bandwidthTester = null;
+let lastNetworkWarningTime = 0; // Timestamp dell'ultima notifica network warning
 
 // DOM Elements
 const localVideo = document.getElementById('localVideo');
@@ -274,11 +276,16 @@ function connectToServer() {
         updateConnectionStatus('disconnected');
     });
 
-    // ✅ Network Monitor Alert
+    // ✅ Network Monitor Alert (throttled to once every 30 seconds)
     socket.on('network-usage', (data) => {
         const totalMbps = (data.totalBitrate / 1000000).toFixed(1);
-        if (totalMbps > 15) { // TEST: Lowered to 15 Mbps to trigger alert easily
+        const now = Date.now();
+        const timeSinceLastWarning = now - lastNetworkWarningTime;
+
+        // Mostra notifica solo se sono passati almeno 30 secondi dall'ultima
+        if (totalMbps > 15 && timeSinceLastWarning >= 30000) {
             showToast(`⚠️ High Network Load: ${totalMbps} Mbps`, 'warning');
+            lastNetworkWarningTime = now;
         }
     });
 
@@ -316,16 +323,69 @@ function connectToServer() {
         console.error('Server error:', data.message);
         showToast(data.message, 'error');
     });
+
+    // Bandwidth test result
+    socket.on('bandwidth-test-result', (data) => {
+        console.log('Bandwidth test complete:', data);
+    });
+
+    // Bandwidth reallocation notification
+    socket.on('bandwidth-reallocated', (data) => {
+        if (webrtcClient) {
+            webrtcClient.setTargetBitrate(data.newBitrate);
+
+            const direction = data.newBitrate > (webrtcClient.maxBitrate || 0) ? '↑' : '↓';
+            const emoji = direction === '↑' ? '📈' : '📉';
+            showToast(
+                `${emoji} Qualità ${direction === '↑' ? 'Aumentata' : 'Ridotta'}: ${(data.newBitrate / 1_000_000).toFixed(1)} Mbps (${data.activeStreamers} stream attivi)`,
+                direction === '↑' ? 'success' : 'warning',
+                4000
+            );
+        }
+    });
+
+    // Bandwidth insufficient (connection rejected)
+    socket.on('bandwidth-insufficient', (data) => {
+        showToast(
+            `❌ Impossibile avviare stream: ${data.message}`,
+            'error',
+            8000
+        );
+        stopStreaming();
+    });
+
+    // Bandwidth status updates
+    socket.on('bandwidth-status', (data) => {
+        console.log('Bandwidth status:', data);
+        // Could update UI with bandwidth info if needed
+    });
 }
 
 // Start streaming
 async function startStreaming() {
     try {
         startBtn.disabled = true;
-        showToast('Starting camera...', 'info');
+
+        // STEP 1: Run bandwidth test
+        const totalBandwidth = await runBandwidthTest();
 
         // Get selected quality preset
         const preset = config.video.presets[qualityPreset.value];
+
+        // STEP 2: Check if quality is achievable with available bandwidth
+        if (totalBandwidth * 1_000_000 < preset.bitrateMin) {
+            showToast(
+                `⚠️ Banda insufficiente per ${qualityPreset.value}. Richiesti ${(preset.bitrateMin / 1_000_000).toFixed(1)} Mbps, disponibili ${totalBandwidth.toFixed(1)} Mbps`,
+                'error',
+                5000
+            );
+            startBtn.disabled = false;
+            return;
+        }
+
+        // STEP 3: Start camera
+        showToast('📷 Avvio camera...', 'info');
+
         const facingMode = cameraSelect.value;
 
         // Get user media
@@ -574,6 +634,32 @@ function updateConnectionStatus(status) {
     };
 
     connectionStatus.querySelector('.status-text').textContent = statusText[status] || status;
+}
+
+// Run bandwidth test
+async function runBandwidthTest() {
+    showToast('🧪 Test banda in corso...', 'info', 10000);
+
+    if (!bandwidthTester) {
+        bandwidthTester = new BandwidthTester();
+    }
+
+    try {
+        const result = await bandwidthTester.testBandwidth(socket, 5000);
+
+        showToast(
+            `📊 Velocità Rete: ↑${result.upload.toFixed(1)} Mbps ↓${result.download.toFixed(1)} Mbps`,
+            'success',
+            5000
+        );
+
+        return result.total;
+    } catch (error) {
+        console.error('Bandwidth test failed:', error);
+        showToast('Test banda fallito, continuo comunque...', 'warning', 3000);
+        // Return default bandwidth assumption
+        return 100; // 100 Mbps default
+    }
 }
 
 // Initialize on load
