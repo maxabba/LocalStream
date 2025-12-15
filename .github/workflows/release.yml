@@ -6,11 +6,12 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build-and-release:
-    name: Build and Release
-    runs-on: macos-latest
-    permissions:
-      contents: write
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
       - name: Checkout code
@@ -26,12 +27,13 @@ jobs:
         run: npm ci
 
       - name: Update Version from Tag
-        id: version
+        shell: bash
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Setting package version to $VERSION"
-          npm version $VERSION --no-git-tag-version --allow-same-version
+          if [[ $GITHUB_REF_NAME =~ ^v ]]; then
+            VERSION=${GITHUB_REF_NAME#v}
+            echo "Setting package version to $VERSION"
+            npm version $VERSION --no-git-tag-version --allow-same-version
+          fi
 
       - name: Generate SSL certificates
         run: npm run generate-cert
@@ -39,7 +41,9 @@ jobs:
       - name: Generate app icons
         run: npm run generate-icons
 
+      # macOS Specific: Apple Certificate Import
       - name: Import Apple Developer Certificate
+        if: matrix.os == 'macos-latest'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -66,27 +70,59 @@ jobs:
           # Clean up certificate file
           rm -f certificate.p12
 
-      - name: Build Electron Apps
-        run: npm run build:all
+      - name: Build Application
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            npm run build:mac
+          elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+            npm run build:windows
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            npm run build:linux
+          fi
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.os }}
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: app-*
+          merge-multiple: true
+          path: dist
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
           body: |
             ## LocalStream Release ${{ github.ref_name }}
 
             ### Downloads
 
-            - **macOS (Intel)**: `LocalStream-${{ steps.version.outputs.VERSION }}-mac-x64.zip`
-            - **macOS (Apple Silicon/M1)**: `LocalStream-${{ steps.version.outputs.VERSION }}-mac-arm64.zip`
-            - **Windows (x64)**: `LocalStream-${{ steps.version.outputs.VERSION }}-win-x64.zip`
-            - **Linux (x64)**: `LocalStream-${{ steps.version.outputs.VERSION }}-linux-x64.zip`
+            - **macOS (Intel)**: `LocalStream-${{ github.ref_name }}-mac-x64.zip`
+            - **macOS (Apple Silicon/M1)**: `LocalStream-${{ github.ref_name }}-mac-arm64.zip`
+            - **Windows (x64)**: `LocalStream-${{ github.ref_name }}-win-x64.zip`
+            - **Linux (x64)**: `LocalStream-${{ github.ref_name }}-linux-x64.zip`
 
             ### Installation
 
@@ -110,7 +146,5 @@ jobs:
             ### Notes
             - Server runs on http://localhost:3000 and https://localhost:3443
             - Check README.md for OBS setup instructions
-          draft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
