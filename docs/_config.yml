@@ -1,0 +1,5 @@
+title: LocalStream
+description: High-performance local network WebRTC streaming for OBS
+theme: jekyll-theme-cayman
+plugins:
+  - jekyll-seo-tag
