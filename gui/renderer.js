@@ -250,3 +250,28 @@ async function loadInitialStatus() {
         addLog(`⚠️ Failed to load initial status: ${error.message}`, 'warning');
     }
 }
+
+// Check for updates
+checkForUpdates();
+
+async function checkForUpdates() {
+    try {
+        const updateBanner = document.getElementById('update-banner');
+        const updateVersion = document.getElementById('update-version');
+        const btnUpdate = document.getElementById('btn-update');
+
+        const result = await window.electronAPI.checkForUpdates();
+
+        if (result.updateAvailable) {
+            updateVersion.textContent = `v${result.version}`;
+            updateBanner.classList.remove('hidden');
+
+            btnUpdate.onclick = () => {
+                window.electronAPI.openURL(result.url);
+            };
+            addLog(`🚀 Update available: v${result.version}`, 'info');
+        }
+    } catch (error) {
+        console.error('Failed to check for updates:', error);
+    }
+}

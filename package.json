@@ -1,6 +1,6 @@
 {
     "name": "localstream",
-    "version": "1.0.17",
+    "version": "1.0.18",
     "description": "Local network WebRTC streaming for OBS",
     "main": "gui/main.js",
     "bin": {
@@ -85,6 +85,7 @@
         "bonjour-service": "^1.2.1",
         "express": "^4.18.2",
         "qrcode": "^1.5.4",
+        "semver": "^7.7.3",
         "socket.io": "^4.7.2"
     },
     "devDependencies": {

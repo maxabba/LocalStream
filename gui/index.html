@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LocalStream Control</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
+        <div id="update-banner" class="update-banner hidden">
+            <span>🎉 Update Available: <strong id="update-version">v1.2.0</strong></span>
+            <button id="btn-update" class="btn-text">Download</button>
+        </div>
+
         <header>
             <div class="logo">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                    <path d="M12 2v4M12 18v4M22 12h-4M6 12H2" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                    <circle cx="12" cy="12" r="3" fill="currentColor" />
+                    <path d="M12 2v4M12 18v4M22 12h-4M6 12H2" stroke="currentColor" stroke-width="2" />
                 </svg>
                 <h1>LocalStream Server</h1>
             </div>
@@ -95,4 +102,5 @@
 
     <script src="renderer.js"></script>
 </body>
+
 </html>

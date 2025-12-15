@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // QR Code generation
     generateQRCode: (text) => ipcRenderer.invoke('generate-qr', text),
 
+    // Updates
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+
     // Event listeners
     onServerStatus: (callback) => {
         ipcRenderer.on('server-status', (_event, data) => callback(data));

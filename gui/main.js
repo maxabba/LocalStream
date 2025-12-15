@@ -184,6 +184,59 @@ ipcMain.handle('generate-qr', async (event, text) => {
     }
 });
 
+ipcMain.handle('check-for-updates', async () => {
+    try {
+        const semver = require('semver');
+        const { net } = require('electron');
+
+        const currentVersion = app.getVersion();
+
+        return new Promise((resolve) => {
+            const request = net.request('https://api.github.com/repos/maxabba/LocalStream/releases/latest');
+
+            request.on('response', (response) => {
+                let data = '';
+                response.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                response.on('end', () => {
+                    try {
+                        const release = JSON.parse(data);
+                        // GitHub release version usually has 'v' prefix, e.g. v1.0.17
+                        const latestVersion = release.tag_name.replace(/^v/, '');
+
+                        // Compare versions
+                        if (semver.gt(latestVersion, currentVersion)) {
+                            console.log(`Update available: ${latestVersion} (current: ${currentVersion})`);
+                            resolve({
+                                updateAvailable: true,
+                                version: latestVersion,
+                                url: release.html_url
+                            });
+                        } else {
+                            resolve({ updateAvailable: false });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing GitHub release:', e);
+                        resolve({ error: e.message });
+                    }
+                });
+            });
+
+            request.on('error', (error) => {
+                console.error('Error fetching updates:', error);
+                resolve({ error: error.message });
+            });
+
+            request.end();
+        });
+    } catch (error) {
+        console.error('Update check error:', error);
+        return { error: error.message };
+    }
+});
+
 // --- App Lifecycle ---
 
 app.whenReady().then(() => {
