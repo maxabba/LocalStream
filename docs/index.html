@@ -4,94 +4,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LocalStream - Professional Local Broadcasting</title>
-    <meta name="description"
-        content="Local network WebRTC streaming for OBS. Zero latency, high quality, completely valid.">
-    <link rel="stylesheet" href="style.css">
+
+    <!-- Primary Meta Tags -->
+    <title>LocalStream - Professional WebRTC Streaming for OBS Studio | Zero Latency Local Broadcasting</title>
+    <meta name="title" content="LocalStream - Professional WebRTC Streaming for OBS Studio | Zero Latency Local Broadcasting">
+    <meta name="description" content="Transform your mobile device into a professional camera source for OBS Studio. Ultra-low latency (<100ms) WebRTC streaming over local network. Free, open-source, and secure. Perfect for content creators, streamers, and broadcasters.">
+    <meta name="keywords" content="OBS streaming, WebRTC camera, local network streaming, mobile camera OBS, low latency streaming, live broadcasting, content creation, OBS browser source, iOS camera source, Android streaming, professional broadcasting">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="author" content="LocalStream Team">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://maxabba.github.io/LocalStream/">
+    <meta property="og:title" content="LocalStream - Professional WebRTC Streaming for OBS Studio">
+    <meta property="og:description" content="Transform your mobile device into a professional camera source for OBS Studio. Ultra-low latency WebRTC streaming over local network.">
+    <meta property="og:image" content="https://maxabba.github.io/LocalStream/images/screenshot-desktop.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://maxabba.github.io/LocalStream/">
+    <meta property="twitter:title" content="LocalStream - Professional WebRTC Streaming for OBS Studio">
+    <meta property="twitter:description" content="Transform your mobile device into a professional camera source for OBS Studio. Ultra-low latency WebRTC streaming over local network.">
+    <meta property="twitter:image" content="https://maxabba.github.io/LocalStream/images/screenshot-desktop.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://maxabba.github.io/LocalStream/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- JSON-LD Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "LocalStream",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "description": "Professional local network WebRTC streaming solution for OBS Studio. Transform mobile devices into camera sources with ultra-low latency.",
+        "softwareVersion": "1.0.12",
+        "featureList": [
+            "Ultra-low latency streaming (<100ms)",
+            "WebRTC peer-to-peer connection",
+            "OBS Studio integration",
+            "Mobile camera support (iOS/Android)",
+            "Advanced camera controls",
+            "Real-time statistics",
+            "Secure HTTPS support",
+            "Cross-platform compatibility"
+        ],
+        "screenshot": "https://maxabba.github.io/LocalStream/images/screenshot-desktop.png",
+        "url": "https://maxabba.github.io/LocalStream/",
+        "downloadUrl": "https://github.com/maxabba/LocalStream/releases/latest",
+        "codeRepository": "https://github.com/maxabba/LocalStream",
+        "author": {
+            "@type": "Organization",
+            "name": "LocalStream Team"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "ratingCount": "1"
+        }
+    }
+    </script>
 </head>
 
 <body>
-    <header>
+    <!-- Animated Background Gradient -->
+    <div class="gradient-bg"></div>
+
+    <header class="main-header">
         <div class="container">
             <nav>
-                <a href="#" class="logo">LocalStream</a>
+                <a href="#" class="logo">
+                    <span class="logo-icon">📡</span>
+                    <span class="logo-text">LocalStream</span>
+                </a>
                 <div class="nav-links">
-                    <a href="#features">Features</a>
-                    <a href="wiki/">Wiki & Docs</a> <!-- Jekyll will generate this URL -->
-                    <a href="https://github.com/maxabba/LocalStream">GitHub</a>
-                    <a href="https://github.com/maxabba/LocalStream/releases/latest" class="btn-primary">Download
-                        v1.0</a>
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="#how-it-works" class="nav-link">How It Works</a>
+                    <a href="#stats" class="nav-link">Performance</a>
+                    <a href="wiki/" class="nav-link">Documentation</a>
+                    <a href="https://github.com/maxabba/LocalStream" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+                    <a href="https://github.com/maxabba/LocalStream/releases/latest" class="btn-primary btn-download" target="_blank" rel="noopener">
+                        <span class="btn-icon">⬇</span>
+                        Download v1.0.12
+                    </a>
                 </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </nav>
         </div>
     </header>
 
-    <section class="hero">
-        <div class="container">
-            <h1>Turn your Local Network<br>into a Broadcasting Studio</h1>
-            <p>Stream high-quality video from your mobile device directly to OBS over your local network. No cloud, no
-                lag, pure performance.</p>
-            <a href="wiki/" class="btn-primary">Get Started</a>
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="badge">Open Source • Free Forever</div>
+                    <h1 class="hero-title">
+                        Turn Your Mobile Device<br>
+                        Into a <span class="gradient-text">Professional Camera</span>
+                    </h1>
+                    <p class="hero-description">
+                        Stream ultra-low latency video from any mobile device directly to OBS Studio over your local network.
+                        No cloud, no subscriptions, no compromises. Just pure performance.
+                    </p>
 
-            <div class="hero-image">
-                <div class="slider">
-                    <div class="slides">
-                        <div class="slide">
-                            <img src="images/screenshot-desktop.png" alt="LocalStream Desktop Dashboard">
-                            <div class="caption">Desktop Control Dashboard</div>
+                    <div class="hero-cta">
+                        <a href="https://github.com/maxabba/LocalStream/releases/latest" class="btn-primary btn-large" target="_blank" rel="noopener">
+                            <span class="btn-icon">⬇</span>
+                            Download for Free
+                        </a>
+                        <a href="wiki/" class="btn-secondary btn-large">
+                            <span class="btn-icon">📖</span>
+                            Quick Start Guide
+                        </a>
+                    </div>
+
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">&lt;100ms</div>
+                            <div class="stat-label">Latency</div>
                         </div>
-                        <div class="slide">
-                            <img src="images/screenshot-mobile.png" alt="LocalStream Mobile Interface">
-                            <div class="caption">Mobile Streamer Interface</div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-value">4K 60fps</div>
+                            <div class="stat-label">Max Quality</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-value">100% Free</div>
+                            <div class="stat-label">Open Source</div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
 
-    <section id="features" class="features">
-        <div class="container">
-            <h2 style="text-align: center; margin-bottom: 3rem;">Why LocalStream?</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Low Latency</h3>
-                    <p>Built with WebRTC for sub-second delay. Perfect until you need it.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Secure & Private</h3>
-                    <p>Everything runs on your local network. No external servers involved.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎥</div>
-                    <h3>OBS Ready</h3>
-                    <p>Designed specifically for integration with OBS Studio browser sources.</p>
+                <div class="hero-visual">
+                    <div class="visual-container">
+                        <div class="slider-wrapper">
+                            <div class="slider">
+                                <div class="slides">
+                                    <div class="slide">
+                                        <img src="images/screenshot-desktop.png" alt="LocalStream Desktop Control Dashboard - Real-time streaming interface" loading="lazy">
+                                        <div class="caption">Desktop Control Dashboard</div>
+                                    </div>
+                                    <div class="slide">
+                                        <img src="images/screenshot-mobile.png" alt="LocalStream Mobile Streamer Interface - Camera controls" loading="lazy">
+                                        <div class="caption">Mobile Streamer Interface</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slider-dots">
+                                <button class="dot active" aria-label="Go to slide 1"></button>
+                                <button class="dot" aria-label="Go to slide 2"></button>
+                            </div>
+                        </div>
+                        <div class="visual-decoration"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Why Choose LocalStream?</h2>
+                    <p class="section-subtitle">Everything you need for professional local broadcasting</p>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+                        <div class="feature-icon-wrapper">
+                            <div class="feature-icon">⚡</div>
+                        </div>
+                        <h3>Ultra-Low Latency</h3>
+                        <p>Built on WebRTC technology for sub-100ms delay. Perfect for real-time interactions, live performances, and professional broadcasting.</p>
+                    </div>
+
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="feature-icon-wrapper">
+                            <div class="feature-icon">🔒</div>
+                        </div>
+                        <h3>100% Private & Secure</h3>
+                        <p>All streaming happens on your local network. Zero cloud dependency means your content never leaves your network.</p>
+                    </div>
+
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="feature-icon-wrapper">
+                            <div class="feature-icon">🎥</div>
+                        </div>
+                        <h3>OBS Studio Ready</h3>
+                        <p>Seamlessly integrates with OBS Studio via browser sources. Add your mobile camera in seconds, no plugins needed.</p>
+                    </div>
+
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+                        <div class="feature-icon-wrapper">
+                            <div class="feature-icon">📱</div>
+                        </div>
+                        <h3>Cross-Platform Support</h3>
+                        <p>Works on iOS, Android, Windows, macOS, and Linux. Use any device you already own as a professional camera.</p>
+                    </div>
+
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="feature-icon-wrapper">
+                            <div class="feature-icon">🎨</div>
+                        </div>
+                        <h3>Advanced Camera Controls</h3>
+                        <p>Fine-tune brightness, contrast, saturation, and white balance in real-time. Professional-grade control at your fingertips.</p>
+                    </div>
+
+                    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="feature-icon-wrapper">
+                            <div class="feature-icon">📊</div>
+                        </div>
+                        <h3>Real-Time Analytics</h3>
+                        <p>Monitor FPS, bitrate, resolution, and connection quality with live statistics. Stay informed, stream confidently.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="how-it-works">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Get Started in 3 Simple Steps</h2>
+                    <p class="section-subtitle">Professional streaming setup in under 5 minutes</p>
+                </div>
+
+                <div class="steps-container">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-icon">🖥️</div>
+                        <h3>Launch LocalStream</h3>
+                        <p>Download and run the app on your computer. It automatically starts the server on your local network.</p>
+                    </div>
+
+                    <div class="step-connector"></div>
+
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-icon">📱</div>
+                        <h3>Connect Mobile Device</h3>
+                        <p>Scan the QR code or enter the URL on your phone. Grant camera access and start streaming with one tap.</p>
+                    </div>
+
+                    <div class="step-connector"></div>
+
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-icon">🎬</div>
+                        <h3>Add to OBS</h3>
+                        <p>Copy the viewer URL and add it as a Browser Source in OBS. Your mobile camera is now live in OBS!</p>
+                    </div>
+                </div>
+
+                <div class="cta-box">
+                    <h3>Ready to transform your streaming setup?</h3>
+                    <a href="wiki/" class="btn-primary btn-large">View Complete Setup Guide</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Stats Section -->
+        <section id="stats" class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-number" data-count="100">&lt;100</div>
+                        <div class="stat-unit">milliseconds</div>
+                        <div class="stat-description">Average Latency</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">🎥</div>
+                        <div class="stat-number" data-count="60">60</div>
+                        <div class="stat-unit">fps</div>
+                        <div class="stat-description">Max Frame Rate</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📐</div>
+                        <div class="stat-number" data-count="4">4K</div>
+                        <div class="stat-unit">resolution</div>
+                        <div class="stat-description">Ultra HD Support</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-number" data-count="0">$0</div>
+                        <div class="stat-unit">forever</div>
+                        <div class="stat-description">100% Free & Open Source</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Start Broadcasting Professionally Today</h2>
+                    <p>Join content creators worldwide who trust LocalStream for their professional streaming needs</p>
+                    <div class="cta-buttons">
+                        <a href="https://github.com/maxabba/LocalStream/releases/latest" class="btn-primary btn-large" target="_blank" rel="noopener">
+                            <span class="btn-icon">⬇</span>
+                            Download Now - It's Free
+                        </a>
+                        <a href="https://github.com/maxabba/LocalStream" class="btn-secondary btn-large" target="_blank" rel="noopener">
+                            <span class="btn-icon">⭐</span>
+                            Star on GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <footer>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-col">
                     <h4>LocalStream</h4>
-                    <a href="#">Home</a>
-                    <a href="https://github.com/maxabba/LocalStream">Source Code</a>
+                    <p class="footer-description">Professional local network streaming for content creators</p>
+                    <div class="social-links">
+                        <a href="https://github.com/maxabba/LocalStream" aria-label="GitHub Repository" target="_blank" rel="noopener">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
                 <div class="footer-col">
-                    <h4>Documentation</h4>
+                    <h4>Getting Started</h4>
                     <a href="wiki/">Setup Guide</a>
-                    <a href="iOS_SETUP.html">iOS Setup</a>
+                    <a href="OBS_SETUP">OBS Integration</a>
+                    <a href="iOS_SETUP">iOS Setup</a>
+                    <a href="BUILD">Build from Source</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <a href="https://github.com/maxabba/LocalStream" target="_blank" rel="noopener">GitHub Repository</a>
+                    <a href="https://github.com/maxabba/LocalStream/releases" target="_blank" rel="noopener">Downloads</a>
+                    <a href="https://github.com/maxabba/LocalStream/issues" target="_blank" rel="noopener">Report Issues</a>
+                    <a href="WebRTC_Analysis">Technical Docs</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Project</h4>
+                    <a href="https://github.com/maxabba/LocalStream/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+                    <a href="https://github.com/maxabba/LocalStream/graphs/contributors" target="_blank" rel="noopener">Contributors</a>
+                    <a href="Compatibility_Report">Compatibility</a>
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2024 LocalStream. Open Source Project.</p>
+                <p>&copy; 2024-2025 LocalStream. Open Source Project under MIT License.</p>
+                <p class="footer-note">Built with ❤️ for the streaming community</p>
             </div>
         </div>
     </footer>

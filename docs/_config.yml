@@ -1,5 +1,76 @@
-title: LocalStream
-description: High-performance local network WebRTC streaming for OBS
+# LocalStream - Jekyll Configuration
+# Optimized for GitHub Pages and SEO
+
+# Site Settings
+title: "LocalStream - Professional WebRTC Streaming for OBS Studio"
+description: "Transform your mobile device into a professional camera source for OBS Studio. Ultra-low latency (<100ms) WebRTC streaming over local network. Free, open-source, and secure."
+url: "https://maxabba.github.io"
+baseurl: "/LocalStream"
+repository: "maxabba/LocalStream"
+
+# Author Information
+author:
+  name: "LocalStream Team"
+  github: "maxabba"
+
+# SEO Optimization
+lang: en
+locale: en_US
+
+# Social Media
+twitter:
+  card: summary_large_image
+
+# GitHub Pages Settings
 theme: jekyll-theme-cayman
+markdown: kramdown
+highlighter: rouge
+
+# Kramdown Settings
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Plugins (GitHub Pages compatible)
 plugins:
+  - jekyll-sitemap
   - jekyll-seo-tag
+  - jekyll-feed
+
+# Feed Settings
+feed:
+  path: atom.xml
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+# Include/Exclude Files
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - README.md
+
+# Compression
+sass:
+  style: compressed
+
+# Permalink Structure
+permalink: pretty
+
+# SEO Tags
+tagline: "Professional Local Network Streaming"
+keywords: "OBS streaming, WebRTC camera, local network streaming, mobile camera OBS, low latency streaming"
+
+# GitHub Metadata
+github:
+  repository_url: "https://github.com/maxabba/LocalStream"
+  download_url: "https://github.com/maxabba/LocalStream/releases/latest"
+
+# Version
+version: "1.0.12"

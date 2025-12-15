@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+    <!-- Main Landing Page -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+        <image:image>
+            <image:loc>https://maxabba.github.io/LocalStream/images/screenshot-desktop.png</image:loc>
+            <image:title>LocalStream Desktop Control Dashboard</image:title>
+        </image:image>
+        <image:image>
+            <image:loc>https://maxabba.github.io/LocalStream/images/screenshot-mobile.png</image:loc>
+            <image:title>LocalStream Mobile Streamer Interface</image:title>
+        </image:image>
+    </url>
+
+    <!-- Documentation Wiki -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/wiki/</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <!-- User Guides -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/OBS_SETUP</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/iOS_SETUP</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- Technical Documentation -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/BUILD</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/WebRTC_Analysis</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/Compatibility_Report</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <!-- Testing & Performance -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/Test_Results</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/Test_Results_High_Load</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <!-- Maintenance -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/DEPLOYMENT_GUIDE</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+    </url>
+
+    <!-- New Technical Documentation -->
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/ARCHITECTURE</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/API_REFERENCE</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://maxabba.github.io/LocalStream/TROUBLESHOOTING</loc>
+        <lastmod>2025-12-15</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+</urlset>

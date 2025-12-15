@@ -1,0 +1,57 @@
+# LocalStream - Robots.txt
+# Optimized for search engine crawling
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://maxabba.github.io/LocalStream/sitemap.xml
+
+# Crawl delay (polite crawling)
+Crawl-delay: 1
+
+# Disallow specific paths if needed in the future
+# Disallow: /private/
+# Disallow: /temp/
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# AI/LLM Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Social Media Crawlers
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
