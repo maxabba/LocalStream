@@ -1,9 +1,24 @@
-const server = require('../server.js');
+// Process communication
+process.on('uncaughtException', (error) => {
+    if (process.connected) process.send({ type: 'error', error: error.message + (error.stack ? '\n' + error.stack : '') });
+    process.exit(1);
+});
+
+let server;
+
+try {
+    server = require('../server.js');
+} catch (error) {
+    if (process.connected) process.send({ type: 'error', error: 'Failed to load server module: ' + error.message + '\n' + error.stack });
+    process.exit(1);
+}
 
 // Process communication
 process.on('message', async (msg) => {
     if (msg.command === 'start') {
         try {
+            if (!server) throw new Error('Server module not loaded');
+
             // Forward logs to parent
             const config = await server.startServer((message) => {
                 if (process.connected) process.send({ type: 'log', message });
@@ -15,7 +30,7 @@ process.on('message', async (msg) => {
         }
     } else if (msg.command === 'stop') {
         try {
-            await server.stopServer();
+            if (server) await server.stopServer();
             if (process.connected) process.send({ type: 'stopped' });
             process.exit(0);
         } catch (error) {
@@ -23,9 +38,4 @@ process.on('message', async (msg) => {
             process.exit(1);
         }
     }
-});
-
-// Handle unexpected errors
-process.on('uncaughtException', (error) => {
-    if (process.connected) process.send({ type: 'error', error: error.message });
 });

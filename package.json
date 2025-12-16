@@ -1,6 +1,6 @@
 {
     "name": "localstream",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "description": "Local network WebRTC streaming for OBS",
     "main": "gui/main.js",
     "bin": {
@@ -28,6 +28,7 @@
             "gui/**/*",
             "public/**/*",
             "server.js",
+            "bandwidth-manager.js",
             "config.json",
             "localhost-*.pem",
             "node_modules/**/*"

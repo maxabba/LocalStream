@@ -57,7 +57,16 @@ function startServerProcess() {
 
         // Handle stdio for debugging
         serverProcess.stdout.on('data', (data) => console.log(`[Server]: ${data}`));
-        serverProcess.stderr.on('data', (data) => console.error(`[Server Error]: ${data}`));
+        serverProcess.stderr.on('data', (data) => {
+            console.error(`[Server Error]: ${data}`);
+            sendLog(`❌ [Server Error]: ${data.toString()}`);
+        });
+
+        serverProcess.on('error', (err) => {
+            sendLog(`❌ Failed to spawn server process: ${err.message}`);
+            serverProcess = null;
+            reject(err);
+        });
 
         // Handle IPC messages from worker
         serverProcess.on('message', (msg) => {
@@ -81,6 +90,7 @@ function startServerProcess() {
             if (code !== 0 && code !== null) {
                 sendLog(`⚠️ Server process exited with code ${code}`);
                 updateStatus('stopped');
+                reject(new Error(`Server process exited with code ${code}`));
             }
             serverProcess = null;
         });

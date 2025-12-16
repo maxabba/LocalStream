@@ -73,9 +73,9 @@ class WebRTCClient {
     }
 
     /**
-     * ✅ Apply LAN Optimizations: H.264, Bitrate Cap, Buffer
+     * ✅ Apply LAN Optimizations: H.264, Bitrate Cap, Buffer + Quick Ramp-Up
      */
-    optimizeForLAN() {
+    async optimizeForLAN() {
         console.log('🚀 Applying LAN optimizations...');
 
         // 1. Buffer configuration for Receiver
@@ -89,45 +89,43 @@ class WebRTCClient {
         });
 
         // 2. Bitrate and Priority configuration for Sender
+        const senderPromises = [];
         this.peerConnection.getSenders().forEach(async sender => {
             if (sender.track && sender.track.kind === 'video') {
-                try {
-                    const params = sender.getParameters();
-                    if (!params.encodings) params.encodings = [{}];
+                const promise = (async () => {
+                    try {
+                        const params = sender.getParameters();
+                        if (!params.encodings) params.encodings = [{}];
 
-                    // Cap bitrate at 6 Mbps for network stability
-                    params.encodings[0].maxBitrate = this.maxBitrate;
+                        // Use serverTargetBitrate if available, otherwise maxBitrate
+                        const targetBitrate = this.serverTargetBitrate || this.maxBitrate;
+                        params.encodings[0].maxBitrate = targetBitrate;
 
-                    // Priority
-                    params.encodings[0].networkPriority = 'high';
+                        // Priority
+                        params.encodings[0].networkPriority = 'high';
 
-                    if ('priority' in sender) {
-                        sender.priority = 'high';
-                    }
-
-                    // Ensure H.264 if possible
-                    if (RTCRtpSender.getCapabilities) {
-                        const caps = RTCRtpSender.getCapabilities('video');
-                        if (caps && caps.codecs) {
-                            // Find H.264 High Profile or Baseline
-                            const h264 = caps.codecs.find(c =>
-                                c.mimeType.toLowerCase() === 'video/h264' &&
-                                (c.sdpFmtpLine.includes('profile-level-id=42e01f') || // High
-                                    c.sdpFmtpLine.includes('profile-level-id=42001f'))   // Baseline
-                            );
-
-                            // Note: setCodecPreferences must be called on Transceiver, not Sender directly usually,
-                            // but we can try to hint via parameters or use setCodecPreferences on transceiver if available.
+                        if ('priority' in sender) {
+                            sender.priority = 'high';
                         }
-                    }
 
-                    await sender.setParameters(params);
-                    console.log(`✅ Sender bitrate capped at ${this.maxBitrate / 1000000} Mbps, Priority High`);
-                } catch (err) {
-                    console.warn('⚠️ Failed to set sender parameters:', err);
-                }
+                        await sender.setParameters(params);
+                        console.log(`✅ Sender bitrate set to ${targetBitrate / 1000000} Mbps, Priority High`);
+                    } catch (err) {
+                        console.warn('⚠️ Failed to set sender parameters:', err);
+                    }
+                })();
+                senderPromises.push(promise);
             }
         });
+
+        // Wait for all sender configurations to complete
+        await Promise.all(senderPromises);
+
+        // 3. Quick ramp-up if we have a server target bitrate
+        if (this.serverTargetBitrate && this.localStream) {
+            console.log(`🎯 Server target bitrate detected: ${(this.serverTargetBitrate / 1000000).toFixed(2)} Mbps`);
+            await this.forceInitialBitrate(this.serverTargetBitrate);
+        }
     }
 
     /**
@@ -259,8 +257,8 @@ class WebRTCClient {
     }
 
     /**
-     * ✅ Conservative Adaptive Bitrate
-     * Adjusts bitrate based on packet loss
+     * ✅ Server-Aware Adaptive Bitrate (Hybrid ABR)
+     * Adjusts bitrate based on packet loss with faster recovery towards server target
      */
     async checkNetworkQuality(stats) {
         // Only run if we are the sender (Streamer)
@@ -271,11 +269,15 @@ class WebRTCClient {
 
         // Initialize state if needed
         if (!this.abrState) {
+            // Use serverTargetBitrate as reference if available
+            const targetBitrate = this.serverTargetBitrate || this.maxBitrate;
+
             this.abrState = {
                 highLossStart: 0,
                 lastRecovery: now,
-                currentBitrateCap: this.maxBitrate,
-                minBitrate: this.serverTargetBitrate || this.maxBitrate * 0.5, // Floor at server target or 50%
+                currentBitrateCap: targetBitrate,  // Start at target
+                minBitrate: targetBitrate * 0.5,   // Floor at 50% of target
+                targetBitrate: targetBitrate,      // Remember target for recovery
                 serverTarget: this.serverTargetBitrate
             };
         }
@@ -302,16 +304,19 @@ class WebRTCClient {
         } else {
             this.abrState.highLossStart = 0;
 
-            // 2. Recovery (Stable for 10s)
-            if (now - this.abrState.lastRecovery > 10000 &&
-                this.abrState.currentBitrateCap < this.maxBitrate) {
+            // 2. Fast Recovery towards target (every 5s instead of 10s)
+            const timeSinceRecovery = now - this.abrState.lastRecovery;
+            const isUnderTarget = this.abrState.currentBitrateCap < this.abrState.targetBitrate;
 
+            // Faster recovery: 5s interval, +20% increase (instead of 10s, +5%)
+            if (timeSinceRecovery > 5000 && isUnderTarget) {
+                const increaseRate = 0.20; // 20% increase
                 const newBitrate = Math.min(
-                    this.abrState.currentBitrateCap * 1.05,
-                    this.maxBitrate
+                    this.abrState.currentBitrateCap * (1 + increaseRate),
+                    this.abrState.targetBitrate  // Ceiling at target, not beyond
                 );
 
-                console.log(`📈 Network stable. Increasing bitrate to ${(newBitrate / 1000000).toFixed(2)} Mbps`);
+                console.log(`📈 Network stable. Increasing bitrate to ${(newBitrate / 1000000).toFixed(2)} Mbps (target: ${(this.abrState.targetBitrate / 1000000).toFixed(2)} Mbps)`);
                 this.abrState.currentBitrateCap = newBitrate;
                 this.abrState.lastRecovery = now;
                 await this.applyBitrateCap(newBitrate);
@@ -338,6 +343,30 @@ class WebRTCClient {
     }
 
     /**
+     * Force initial bitrate with quick ramp-up
+     * Used at connection start to reach target quickly
+     * @param {number} targetBitrate - Target bitrate in bps
+     */
+    async forceInitialBitrate(targetBitrate) {
+        // Aggressive initial ramp-up in 3 steps
+        const steps = [
+            targetBitrate * 0.5,  // 50% immediately
+            targetBitrate * 0.8,  // 80% after 500ms
+            targetBitrate         // 100% after 1s
+        ];
+
+        console.log(`🚀 Quick ramp-up to ${(targetBitrate / 1000000).toFixed(2)} Mbps`);
+
+        for (let i = 0; i < steps.length; i++) {
+            await this.applyBitrateCap(steps[i]);
+            console.log(`   Step ${i + 1}/3: ${(steps[i] / 1000000).toFixed(2)} Mbps`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        console.log(`✅ Initial ramp-up complete: ${(targetBitrate / 1000000).toFixed(2)} Mbps`);
+    }
+
+    /**
      * Set target bitrate from server (gradual transition)
      * @param {number} targetBitrate - Target bitrate in bps
      */
@@ -358,11 +387,13 @@ class WebRTCClient {
         this.maxBitrate = targetBitrate;
         this.serverTargetBitrate = targetBitrate;
 
-        // Update ABR state if exists
+        // Update ABR state with new target
         if (this.abrState) {
             this.abrState.currentBitrateCap = targetBitrate;
+            this.abrState.targetBitrate = targetBitrate;
             this.abrState.minBitrate = targetBitrate * 0.5;
             this.abrState.serverTarget = targetBitrate;
+            this.abrState.lastRecovery = Date.now(); // Reset recovery timer
         }
 
         console.log(`✅ Bitrate adjusted to ${(targetBitrate / 1000000).toFixed(2)} Mbps`);
