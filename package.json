@@ -33,6 +33,7 @@
             "localhost-*.pem",
             "node_modules/**/*"
         ],
+        "afterSign": "scripts/notarize.js",
         "mac": {
             "target": [
                 {
@@ -45,10 +46,13 @@
             ],
             "category": "public.app-category.utilities",
             "icon": "gui/icon.icns",
-            "hardenedRuntime": false,
+            "hardenedRuntime": true,
             "gatekeeperAssess": false,
             "entitlements": "build/entitlements.mac.plist",
-            "entitlementsInherit": "build/entitlements.mac.plist"
+            "entitlementsInherit": "build/entitlements.mac.plist",
+            "notarize": {
+                "teamId": "38C8C426NW"
+            }
         },
         "win": {
             "target": [
@@ -90,6 +94,7 @@
         "socket.io": "^4.7.2"
     },
     "devDependencies": {
+        "@electron/notarize": "^3.1.1",
         "electron": "^28.0.0",
         "electron-builder": "^26.0.12",
         "nodemon": "^3.0.2",

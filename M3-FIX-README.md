@@ -1,6 +1,14 @@
 # 🔧 Fix Crash LocalStream su Mac M3
 
-## TL;DR - Quick Fix
+## 🎉 AGGIORNAMENTO: Soluzione Definitiva Disponibile
+
+**Buone notizie!** La notarizzazione Apple è ora configurata. La prossima release (v1.0.20+) funzionerà immediatamente su M3 **senza comandi terminal**.
+
+Vedi: [NOTARIZATION-SETUP.md](NOTARIZATION-SETUP.md) e [M3-FIX-MIGRATION.md](M3-FIX-MIGRATION.md)
+
+---
+
+## TL;DR - Quick Fix (Versioni attuali)
 
 Sul Mac M3 dove l'app crasha, esegui:
 
