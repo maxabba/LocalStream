@@ -1,5 +1,3 @@
-const { notarize } = require('@electron/notarize');
-
 exports.default = async function notarizing(context) {
   const { electronPlatformName, appOutDir } = context;
 
@@ -26,6 +24,9 @@ exports.default = async function notarizing(context) {
   console.log(`Notarizing ${appName} at ${appPath}...`);
 
   try {
+    // Dynamic import for ES module
+    const { notarize } = await import('@electron/notarize');
+
     await notarize({
       appBundleId: 'com.localstream.app',
       appPath: appPath,
